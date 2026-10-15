@@ -64,7 +64,6 @@ Explores merchant-category performance, transaction amounts, failed transactions
 
 Compares sender and receiver banks and analyzes transaction distribution across states and union territories.
 
-## 📊 Dashboard Preview
 
 ![UPI Transaction Analytics Dashboard](Insights.png)
 
