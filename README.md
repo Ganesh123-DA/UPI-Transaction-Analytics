@@ -1,4 +1,4 @@
-# 📊 UPI Transaction Analytics Dashboard | Power BI
+# 📊 UPI Transaction Analytics Dashboard | SQL & Power BI
 
 An interactive Power BI dashboard for analyzing UPI transaction performance, merchant activity, banking patterns, state-wise transactions, and fraud indicators.
 
