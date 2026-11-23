@@ -115,7 +115,130 @@ WHERE U.receiver_BANK = US.receiver_BANK
 )
 ORDER BY U.AMOUNT ASC ;
 
+
+-- CTE_Analysis 
              
- 
+ -- Q1. Find all successful transactions.
+-- Display transaction_id, amount, and transaction_status.
+
+WITH SUCCESS_TRANS AS (
+    SELECT transaction_id, amount, transaction_status
+    FROM upi_staging
+    WHERE transaction_status = 'SUCCESS'
+)
+SELECT *
+FROM SUCCESS_TRANS;
+
+-- Q2. Calculate total transactions for each sender_bank.
+-- Display sender_bank and total_transactions.
+
+WITH BANK_COUNT AS (
+    SELECT sender_bank, COUNT(*) AS total_transactions
+    FROM upi_staging
+    GROUP BY sender_bank
+)
+SELECT *
+FROM BANK_COUNT;
+
+-- Q3. Find sender banks having more than 1000 transactions.
+-- Display sender_bank and total_transactions.
+
+WITH BANK_COUNT AS (
+    SELECT sender_bank, COUNT(*) AS total_transactions
+    FROM upi_staging
+    GROUP BY sender_bank
+)
+SELECT *
+FROM BANK_COUNT
+WHERE total_transactions > 1000;
+
+-- Q4. Categorize transactions as Low, Medium, and High.
+-- Display transaction_id, amount, and amount_category.
+
+WITH AMOUNT_CATEGORY AS (
+    SELECT transaction_id, amount,
+           CASE
+               WHEN amount < 1000 THEN 'LOW'
+               WHEN amount BETWEEN 1000 AND 5000 THEN 'MEDIUM'
+               ELSE 'HIGH'
+           END AS amount_category
+    FROM upi_staging
+)
+SELECT *
+FROM AMOUNT_CATEGORY;
+
+
+-- Q5. Find banks having more than 500 failed transactions.
+-- Display sender_bank and failed_transactions.
+
+WITH FAILED_TRANS AS (
+    SELECT sender_bank, COUNT(*) AS failed_transactions
+    FROM upi_staging
+    WHERE transaction_status = 'FAILED'
+    GROUP BY sender_bank
+)
+SELECT *
+FROM FAILED_TRANS
+WHERE failed_transactions > 500;
+
+
+-- Q6. Find transactions having an amount greater than
+-- the overall average transaction amount.
+-- Display transaction_id and amount.
+
+WITH AVG_AMOUNT AS (
+    SELECT AVG(amount) AS average_amount
+    FROM upi_staging
+)
+SELECT transaction_id, amount
+FROM upi_staging
+WHERE amount > (SELECT average_amount FROM AVG_AMOUNT);
+
+
+-- Q7. Find success percentage for each transaction_type.
+-- Display transaction_type, total_transactions,
+-- successful_transactions, and success_percentage.
+
+WITH TOTAL_TRANS AS (
+    SELECT transaction_type, COUNT(*) AS total_transactions
+    FROM upi_staging
+    GROUP BY transaction_type
+),
+SUCCESS_TRANS AS (
+    SELECT transaction_type, COUNT(*) AS successful_transactions
+    FROM upi_staging
+    WHERE transaction_status = 'SUCCESS'
+    GROUP BY transaction_type
+)
+SELECT T.transaction_type,
+       T.total_transactions,
+       S.successful_transactions,
+       ROUND(S.successful_transactions * 100.0 /
+             T.total_transactions, 2) AS success_percentage
+FROM TOTAL_TRANS T
+LEFT JOIN SUCCESS_TRANS S
+ON T.transaction_type = S.transaction_type;
+
+
+-- Q8. Find the top 3 highest-value transactions for each sender_bank.
+-- Display transaction_id, sender_bank, and amount.
+
+WITH BANK_RANK AS (
+    SELECT transaction_id, sender_bank, amount,
+           DENSE_RANK() OVER(
+               PARTITION BY sender_bank
+               ORDER BY amount DESC
+           ) AS transaction_rank
+    FROM upi_staging
+)
+SELECT transaction_id, sender_bank, amount
+FROM BANK_RANK
+WHERE transaction_rank <= 3;
+
+
+
+
+
+
 
 
